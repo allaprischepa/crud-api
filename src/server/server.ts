@@ -1,62 +1,47 @@
 import http from 'http';
 import { UsersDatabase } from '../database/database';
-import { HTTP_METHODS } from './constants';
-import { validate } from 'uuid';
+import { handleApiUsers, handleApiUsersUserId } from './handler';
 
 const db = new UsersDatabase();
 
 export const server = http.createServer((req, res) => {
-  const { url, method } = req;
-  let statusCode = 404;
-  let resBody: unknown;
-  let reqBody = '';
+  const { url, method = '' } = req;
+  let body = '';
 
   req.on('data', (chunk) => {
-    reqBody += chunk.toString();
+    body += chunk.toString();
   });
 
   req.on('end', () => {
     const userIdMatch = url && url.match(/\/api\/users\/(\S+)/);
     const userId = userIdMatch ? userIdMatch[1] : '';
 
-    switch (url) {
-      case '/api/users':
-        if (method === HTTP_METHODS.GET) {
-          statusCode = 200;
-          resBody = db.getAllUsers();
-        }
-        if (method === HTTP_METHODS.POST) {
-          const postObj = JSON.parse(reqBody);
+    let response;
 
-          console.log(postObj);
-        }
-        break;
-      case `/api/users/${userId}`: {
-        console.log('here');
-        if (method === HTTP_METHODS.GET) {
-          const user = db.getUser(userId);
-
-          if (user) {
-            statusCode = 200;
-            resBody = user;
-          } else if (validate(userId)) {
-            statusCode = 404;
-            resBody = `User with id: ${userId} is not found`;
-          } else {
-            statusCode = 400;
-            resBody = `Id: ${userId} is not a valid uuid`;
-          }
-        }
-        break;
+    try {
+      if (url === '/api/users') response = handleApiUsers(method, body, db);
+      else if (url === `/api/users/${userId}`) {
+        response = handleApiUsersUserId(method, body, userId, db);
+      } else {
+        response = {
+          status: 404,
+          data: { error: 'Not Found' },
+        };
       }
-      default:
+    } catch (error) {
+      let errorMsg = 'Internal Server Error';
+
+      if (error instanceof Error && error.message) {
+        errorMsg += `. Cause: ${error.message}`;
+      }
+
+      response = {
+        status: 500,
+        data: { error: errorMsg },
+      };
     }
 
-    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-    res.end(
-      JSON.stringify({
-        data: resBody,
-      })
-    );
+    res.writeHead(response.status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ data: response.data }));
   });
 });
