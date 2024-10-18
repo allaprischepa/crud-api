@@ -1,11 +1,18 @@
 import http from 'http';
 import { UsersDatabase } from '../database/database';
-import { handleApiUsers, handleApiUsersUserId } from './handler';
+import {
+  handleApiUsers,
+  handleApiUsersUserId,
+  handleInternalError,
+  handleNotFound,
+} from './handler';
 
 const db = new UsersDatabase();
 
 export const server = http.createServer((req, res) => {
-  const { url, method = '' } = req;
+  const { url: originUrl, method = '' } = req;
+  const urlObj = new URL(`http://localhost${originUrl}`);
+  const url = urlObj.pathname;
   let body = '';
 
   req.on('data', (chunk) => {
@@ -19,26 +26,15 @@ export const server = http.createServer((req, res) => {
     let response;
 
     try {
-      if (url === '/api/users') response = handleApiUsers(method, body, db);
-      else if (url === `/api/users/${userId}`) {
+      if (url === '/api/users') {
+        response = handleApiUsers(method, body, db);
+      } else if (url === `/api/users/${userId}`) {
         response = handleApiUsersUserId(method, body, userId, db);
       } else {
-        response = {
-          status: 404,
-          data: { error: 'Not Found' },
-        };
+        response = handleNotFound();
       }
     } catch (error) {
-      let errorMsg = 'Internal Server Error';
-
-      if (error instanceof Error && error.message) {
-        errorMsg += `. Cause: ${error.message}`;
-      }
-
-      response = {
-        status: 500,
-        data: { error: errorMsg },
-      };
+      response = handleInternalError(error);
     }
 
     res.writeHead(response.status, { 'Content-Type': 'application/json' });

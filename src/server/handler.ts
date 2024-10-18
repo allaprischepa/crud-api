@@ -17,12 +17,18 @@ export function handleApiUsers(
       const userData = (body && JSON.parse(body)) || {};
 
       if (validUserData(userData)) {
-        db.create(userData);
+        const userRecord = db.create(userData);
         status = 201;
-        data = { message: 'User created successfully' };
+        data = {
+          message: 'User created successfully',
+          user: userRecord,
+        };
       } else {
-        status = 401;
-        data = { error: 'There are missing arguments or they have wrong type' };
+        status = 400;
+        data = {
+          error:
+            'Request body does not contain required fields or they have wrong types',
+        };
       }
     } catch {
       status = 400;
@@ -44,13 +50,43 @@ export function handleApiUsersUserId(
 ) {
   let status = 200;
   let data: unknown;
+  const allowedMethods = [
+    HTTP_METHODS.GET,
+    HTTP_METHODS.PUT,
+    HTTP_METHODS.DELETE,
+  ];
 
-  if (method === HTTP_METHODS.GET) {
+  if (allowedMethods.includes(method)) {
     const user = db.getUser(userId);
 
     if (user) {
-      status = 200;
-      data = user;
+      if (method === HTTP_METHODS.GET) {
+        data = user;
+      } else if (method === HTTP_METHODS.PUT) {
+        try {
+          const userData = (body && JSON.parse(body)) || {};
+
+          if (validUserData(userData, false)) {
+            const userRecord = db.update(userId, userData);
+            data = {
+              message: 'User updated successfully',
+              user: userRecord,
+            };
+          } else {
+            status = 401;
+            data = {
+              error:
+                'Request body does not contain required fields or they have wrong types',
+            };
+          }
+        } catch {
+          status = 400;
+          data = { error: 'Invalid JSON' };
+        }
+      } else if (method === HTTP_METHODS.DELETE) {
+        db.delete(userId);
+        status = 204;
+      }
     } else if (validate(userId)) {
       status = 404;
       data = { error: `User with id: ${userId} is not found` };
@@ -64,4 +100,24 @@ export function handleApiUsersUserId(
   }
 
   return { status, data };
+}
+
+export function handleNotFound() {
+  return {
+    status: 404,
+    data: { error: 'Not Found' },
+  };
+}
+
+export function handleInternalError(error: unknown) {
+  let errorMsg = 'Internal Server Error';
+
+  if (error instanceof Error && error.message) {
+    errorMsg += `. Cause: ${error.message}`;
+  }
+
+  return {
+    status: 500,
+    data: { error: errorMsg },
+  };
 }
