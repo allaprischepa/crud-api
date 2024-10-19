@@ -6,3 +6,8 @@ export interface User {
 }
 
 export type UserData = Omit<User, 'id'>;
+
+export interface ProcessMsg {
+  type: string;
+  data: User[];
+}

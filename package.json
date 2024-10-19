@@ -7,6 +7,7 @@
   "scripts": {
     "start:dev": "nodemon --env-file=.env ./src/index.ts",
     "start:prod": "webpack && node --env-file=.env ./dist/index.js",
+    "start:multi": "node --no-warnings=ExperimentalWarning --loader ts-node/esm --env-file=.env ./src/multi.ts",
     "format": "prettier ./src --write",
     "lint": "eslint"
   },

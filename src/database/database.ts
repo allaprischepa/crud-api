@@ -31,6 +31,8 @@ export class UsersDatabase {
 
     this.users.push(newUser);
 
+    if (process.send) process.send({ type: 'DATA_CREATED', data: newUser });
+
     return newUser;
   }
 
@@ -45,6 +47,8 @@ export class UsersDatabase {
       if (age !== undefined) user.age = age;
       if (hobbies !== undefined) user.hobbies = hobbies;
 
+      if (process.send) process.send({ type: 'DATA_UPDATED', data: user });
+
       return user;
     }
 
@@ -53,7 +57,16 @@ export class UsersDatabase {
 
   delete(userId: string) {
     const userInd = this.users.findIndex((user) => user.id === userId);
+    const user = this.users[userInd];
+
+    if (process.send) process.send({ type: 'DATA_DELETED', data: user });
 
     this.users.splice(userInd, 1);
   }
+
+  sync(arr: User[]) {
+    this.users = arr;
+  }
 }
+
+export const db = new UsersDatabase();

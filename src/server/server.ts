@@ -11,7 +11,8 @@ export class Api {
   createServer(db: UsersDatabase) {
     return http.createServer((req, res) => {
       const { url: originUrl, method = '' } = req;
-      const urlObj = new URL(`http://localhost${originUrl}`);
+      const host = req.headers.host || 'localhost';
+      const urlObj = new URL(`http://${host}${originUrl}`);
       const url = urlObj.pathname;
       let body = '';
 
