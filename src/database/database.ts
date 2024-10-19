@@ -3,6 +3,15 @@ import { User, UserData } from '../utils/types';
 
 export class UsersDatabase {
   private users: User[] = [];
+  private static instance: UsersDatabase;
+
+  constructor() {
+    if (UsersDatabase.instance) {
+      return UsersDatabase.instance;
+    }
+
+    UsersDatabase.instance = this;
+  }
 
   getUser(id: string): User | null {
     return this.users.find((user) => user.id === id) || null;
