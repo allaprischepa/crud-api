@@ -66,7 +66,7 @@ export function handleApiUsersUserId(
         try {
           const userData = (body && JSON.parse(body)) || {};
 
-          if (validUserData(userData, false)) {
+          if (validUserData(userData)) {
             const userRecord = db.update(userId, userData);
             data = {
               message: 'User updated successfully',
