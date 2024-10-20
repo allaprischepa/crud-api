@@ -21,12 +21,12 @@ export class Api {
       });
 
       req.on('end', () => {
-        const userIdMatch = url && url.match(/\/api\/users\/(\S+)/);
-        const userId = userIdMatch ? userIdMatch[1] : '';
-
         let response;
 
         try {
+          const userIdMatch = url && url.match(/\/api\/users\/(\S+)/);
+          const userId = userIdMatch ? userIdMatch[1] : '';
+
           if (url === '/api/users') {
             response = handleApiUsers(method, body, db);
           } else if (url === `/api/users/${userId}`) {
