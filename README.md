@@ -170,6 +170,9 @@ curl --location 'localhost:4000/api/users' \
   - When `User found` and `All required data is provided and valid`:
       - Status Code: `200 OK`
       - Body: Success message and an updated User object.
+  - When `User found` and `Missing or invalid required fields`:
+      - Status Code: `400 Bad Request`
+      - Body: Error message.
   - When `userId is invalid (not a UUID)`:
       - Status Code: `400 Bad Request`
       - Body: Error message.
