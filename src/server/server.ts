@@ -9,7 +9,7 @@ import {
 
 export class Api {
   createServer(db: UsersDatabase) {
-    return http.createServer((req, res) => {
+    const server = http.createServer((req, res) => {
       const { url: originUrl, method = '' } = req;
       const host = req.headers.host || 'localhost';
       const urlObj = new URL(`http://${host}${originUrl}`);
@@ -42,5 +42,11 @@ export class Api {
         res.end(JSON.stringify({ data: response.data }));
       });
     });
+
+    server.on('error', (error) => {
+      console.error(`Some error occured on server:`, error);
+    });
+
+    return server;
   }
 }
