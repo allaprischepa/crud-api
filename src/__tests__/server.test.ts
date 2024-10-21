@@ -318,3 +318,42 @@ describe('API test scenario #4', () => {
       });
   });
 });
+
+describe('API test scenario #5', () => {
+  const db1 = new UsersDatabase();
+  const server = api.createServer(db1);
+  server.listen(TEST_PORT + 4);
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  afterAll((done) => {
+    server.close(done);
+  });
+
+  // Test for Internal Server Error on POST /api/users
+  it('POST /api/users - should return 500 Internal Server Error when there is some error on the server side', (done) => {
+    db1.create = jest.fn().mockImplementation(() => {
+      throw new Error('Simulated database error');
+    });
+
+    const userDataToCreate = {
+      username: 'John Doe',
+      age: 30,
+      hobbies: ['reading', 'travelling'],
+    };
+
+    request(server)
+      .post('/api/users')
+      .send(userDataToCreate)
+      .set('Accept', 'application/json')
+      .expect(500)
+      .then((response) => {
+        const { error } = response.body.data;
+        expect(error).toContain('Internal Server Error');
+        done();
+      })
+      .catch((err) => done(err));
+  });
+});
