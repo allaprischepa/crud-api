@@ -30,9 +30,13 @@ export function handleApiUsers(
             'Request body does not contain required fields or they have wrong types',
         };
       }
-    } catch {
-      status = 400;
-      data = { error: 'Invalid JSON' };
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        status = 400;
+        data = { error: 'Invalid JSON' };
+      } else {
+        throw err;
+      }
     }
   } else {
     status = 405;
@@ -79,9 +83,13 @@ export function handleApiUsersUserId(
                 'Request body does not contain required fields or they have wrong types',
             };
           }
-        } catch {
-          status = 400;
-          data = { error: 'Invalid JSON' };
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            status = 400;
+            data = { error: 'Invalid JSON' };
+          } else {
+            throw err;
+          }
         }
       } else if (method === HTTP_METHODS.DELETE) {
         db.delete(userId);
